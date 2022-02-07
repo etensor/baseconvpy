@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+from convb import convert_decbase
 
 def texbox(text):
     texbx = st.container()
@@ -40,4 +41,4 @@ if opt_menu == "Convertidor de Bases":
 
             
             with col_nums:
-                campo_numeros([1,2,3,4])
+                campo_numeros([0,0,0,0])

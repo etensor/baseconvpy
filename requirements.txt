@@ -1,7 +1,4 @@
 streamlit
-numpy
-matplotlib
-sympy
 rich
 textual
 pyfiglet

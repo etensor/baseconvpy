@@ -1,29 +1,27 @@
 from decimal import getcontext
-# dpenillac@69675
 #getcontext().prec = 24 # 32 bit ieee754 <-- ?
-                        # 64 bit -> 53 ->?<== X <=0.0
+                        # 64 bit -> 53 ->? <== X <=0.0
                         # formato ieee754'
 
 ### -> b16 -> b2 -> b8 
 #  3 bits -> b8
 #  4 bits -> b16
 # | <-- primero |==> res[::-1]
-
+# ----------------------------
 
 def convert_decbase(num, base, prec=24):
     getcontext().prec = prec
     num = num.split('.')
-    exts = [chr(65+i) for i in range(base-10)]
+    exts = [chr(65+i) for i in range(6)]
     z,q = int(num[0]),float('0.'+num[1])
     result = ""
 
     while (z > 1):
         res = int(z%base)
         z  /= int(base)
-        if (res > 9):
+        if (res > 9 and base > 10): 
             result += exts[res-10]
-        else:
-            result += str(res)
+        else: result += str(res)
     
     result = result[::-1] + '.'
     
@@ -36,19 +34,24 @@ def convert_decbase(num, base, prec=24):
         idx+=1
 
     
-    print(f"\t {num} -B{base}-> {result}")
+    #print(f"\t {num} -B{base}-> {result}")
     return result
 
 
 def convert_to_dec(num,base,prec=24):
     getcontext().prec = prec
-    num = num.split('.')
-    z,q = num[0],num[1]
-    basedict = []
+    
+    q = ''
+    if '.' in num:
+        num = num.split('.')
+        z,q = num[0],num[1]
+    else:
+        z = num
+
+    basedict = {chr(65+i): 10+i for i in range(base-10)}
+
     result = ""
     res = 0.0
-    if base > 10:
-        basedict = {chr(65+i): 10+i for i in range(base-10)}
 
     idxn = 0
     while(idxn < len(z)):
@@ -63,26 +66,46 @@ def convert_to_dec(num,base,prec=24):
 
     idxn = 0
     resq = 0.0
-    while(idxn < len(q)):
-        x = q[idxn]
-        if (base > 10 and x in basedict.keys()):
-            x = basedict[x]
-        xi = int(x)
-        resq += xi*(base**((idxn+1)*-1))
-        idxn+=1
+    if q != '':   
+        while(idxn < len(q)):
+            x = q[idxn]
+            if x == '.':
+                idxn+=1
+                continue
+            if (base > 10 and x in basedict.keys()):
+                x = basedict[x]
+            xi = int(x)
+            resq += xi*(base**((idxn+1)*-1))
+            idxn+=1
     
+    #result = str(round(int(res) + resq, len(z)+len(q)+1))
     result = str(int(res) + resq)
-    print(result,' | ',res+resq)
+    #print(z+'.'+q,f" -- B{base} -> DEC  |   ",res+resq)
     return result
+
+
+#----------------------------------------------------------------
+# Maneras más óptimas existirán para directamente convertir de cualquier base
+# a cualquier otra. Seguimos buscándolas 
+
+def convertirNM(num,bN,bM,prec=16):
+    return convert_decbase(convert_to_dec(num, bN,prec), bM,prec) if bN != bM else num
+
+
         
 
 
-convert_decbase('37178.42247',2)
-convert_decbase('135.245',8)
-convert_decbase('7821852.14754',16)
+#print(convert_to_dec('13F.A',16))
 
-convert_to_dec('EFC.ABC',16)
-convert_to_dec('BA9831.BBA12',13)
-convert_to_dec('315131.12351',6)
+#numx = input('ingrese numero: ')
+#x=convert_to_dec(convert_decbase(numx, 2),2)
 
-# falta: oct -> hexa || ... 
+#onvert_decbase(numx, 8)
+#convert_decbase(numx, 16)
+# 2 -> 8: 2 -> 10 -> 8
+#x = convert_decbase(convert_to_dec(numx,2),8) # funciona bN -> bM <== bN -> b10 -> bM | suboptimo ?
+
+#print(f" EPA : {x}")
+
+#print(convertirNM(numx,10,8))
+#print(convert_decbase(convert_to_dec(numx,10),8))

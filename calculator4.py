@@ -126,7 +126,7 @@ class Calculator(GridView):
         "+/-": LIGHT,
     }
 
-    display = Reactive("0.0")
+    display = Reactive("0")
     show_ac = Reactive(True)
 
 
@@ -143,7 +143,7 @@ class Calculator(GridView):
         # =>> watch: update valor del display [   0.0   ]
         #self.numbers[0].value = convertirNM(self.value,self.baseT,2)
 
-        idx = self.get_baseT()
+        idx = self.getbaseT_idx()
         print(idx)
         self.display = self.numbers[idx].value = value
         for ix in range(len(self.numbers)):
@@ -151,8 +151,7 @@ class Calculator(GridView):
                 self.numbers[ix].value = self.conversor.convertirNM(
                     self.value,
                     self.baseT,
-                    self.vect_bases[ix],
-                    prec=len(self.value)+3
+                    self.vect_bases[ix]
                     )
 
 
@@ -171,11 +170,7 @@ class Calculator(GridView):
 
 
     def on_mount(self) -> None:
-        # solo al comienzo
-        #self.left = Decimal("0.0")
-        #self.right = Decimal("0.0")
-        self.value = ""
-        #self.operator = "+"
+        self.value = "0"
 
         # The calculator display
         # button : BIN -> B_2 , ...
@@ -188,7 +183,7 @@ class Calculator(GridView):
         self.sel_base(10)
         
 
-        self.emptyspc = EleganTexto("")
+        self.emptyspc = EleganTexto("","white on rgb(0,0,0)")
 
         self.titulo = EleganTexto(
             "Conversor de Bases", "rgb(0,100,60) on rgb(20,20,20)")
@@ -204,13 +199,14 @@ class Calculator(GridView):
             # Elegante compresion para formar botones
         self.buttons = {
             name: make_button(name, self.BUTTON_STYLES.get(name, self.DARK))
-            for name in "+/-,=,D,E,F,A,B,C,7,8,9,4,5,6,1,2,3,.".split(",")
+            for name in "+/-,D,E,F,A,B,C,7,8,9,4,5,6,1,2,3,.".split(",")
         }
 
         # Buttons that have to be treated specially
         self.zero = make_button("0", self.DARK)
         self.ac = make_button("AC", self.LIGHT)
         self.c = make_button("EC", self.YELLOW)
+        self.elim  = make_button("DEL",self.LIGHT)
         self.c.visible = False
 
         # Set basic grid settingsq
@@ -219,10 +215,11 @@ class Calculator(GridView):
         self.grid.set_align("center", "center")  # <- ?
 
         # Create rows / columns / areas
-        self.grid.add_column("col", max_size=30, repeat=8)  # 5
+        self.grid.add_column("col", max_size=30, repeat=8) 
         self.grid.add_row("row", max_size=12, repeat=7)
         self.grid.add_areas(                     # <== if defined -> grid.place<->vincular
             clear="col1,row1",
+            elim="col3,row1",
             texto10="col4,row2",
             texto2="col4,row3",
             texto8="col4,row4",
@@ -249,6 +246,7 @@ class Calculator(GridView):
             texto16=self.textos['HEX'],
             emptyspc=self.emptyspc,     # cambiar este
             titulo=self.titulo,
+            elim=self.elim,
             *self.buttons.values(),
             clear=self.ac,
             zero=self.zero
@@ -266,20 +264,22 @@ class Calculator(GridView):
         self.bases[self.baseT] = False
         self.textos[self.basedict[self.baseT]
                     ].style = dact_style
+        
         self.bases[b] = True
         self.textos[self.basedict[b]].style = act_style
         self.baseT = b
 
-    def get_baseT(self):
+        idx = self.getbaseT_idx()
+        if idx != b:
+            self.value = self.numbers[idx].value
+
+    def getbaseT_idx(self):
         idx : int
-        #bT: str
         for i, x in enumerate(self.bases.values()):
             if x:
                 idx = i
                 break
         return idx
-        #for i,x in enumerate(self.bases.keys()):
-            #if 
        
 
 
@@ -295,20 +295,21 @@ class Calculator(GridView):
         if button_name.isdigit():
             i = int(button_name)
             if (self.baseT == 8 and i > 7) \
-                or (self.baseT == 2 and i > 1):
+            or (self.baseT == 2 and i > 1):
                 pass
             else:
-                self.display = self.value = self.value.lstrip("0") + button_name
+                self.display = self.value = self.value + button_name
             #self.display = self.value = self.value.lstrip("0") + button_name
         
         elif button_name == "+/-":
             self.display = self.value = str(Decimal(self.value or "0") * -1)
         elif button_name == ".":  # importante para solo agregar un .
             if "." not in self.value:
-                self.display = self.value = (self.value or "0.0") + "."
+                self.display = self.value = (self.value + '.' or "0.0")
         elif button_name == "AC":       # reset
             self.value = ""
             self.display = "0.0"
+
         elif button_name == "EC":
             self.value = ""
             self.display = "0.0"
@@ -317,16 +318,11 @@ class Calculator(GridView):
             if self.baseT > 10:
                 self.display = self.value = self.value.lstrip("0") + button_name
 
-        elif button_name == "=":
-            pass
-            # do_math()
+        elif button_name == "DEL":
+            if len(self.value) > 0:
+                self.display = self.value = self.value[0:len(self.value)-1]
+            
 
-        ''' 
-        elif button_name in ("+", "-", "/", "X"):
-            self.right = Decimal(self.value or "0")
-            do_math()
-            self.operator = button_name
-        '''
 
 
 class CalculatorApp(App):
@@ -355,21 +351,30 @@ class CalculatorApp(App):
         
 
     def on_key(self, event):
-        idx = self.calc.get_baseT()
+        idx = self.calc.getbaseT_idx()
 
         if event.key.isdigit():
-            self.calc.display = self.calc.value = self.calc.value.lstrip("0") + event.key
-            self.calc.numbers[idx].value = self.calc.display
+            i = int(event.key)
+            if (self.calc.baseT == 8 and i > 7) \
+                or (self.calc.baseT == 2 and i > 1):
+                pass
+            else:
+                self.calc.display = self.calc.value = self.calc.value + event.key
+                self.calc.numbers[idx].value = self.calc.display
 
-        if event.key in ('a', 'b', 'c', 'd', 'e', 'f'):
+        if event.key in ('a', 'b', 'c', 'd', 'e', 'f') or event.key in ('A','B','C','D','E','F'):
             if self.calc.baseT > 10:
-                self.calc.display = self.calc.value = self.calc.value.lstrip(
-                    "0") + event.key.upper()
+                self.calc.display = self.calc.value = self.calc.value + event.key.upper()
                 self.calc.numbers[idx].value = self.calc.display
         
         if event.key == '.':
-            if "." not in self.calc.value:
-                self.calc.display = self.calc.value = (self.calc.value or "0.0") + "."
+            if "." not in self.calc.display or self.display == '':
+                self.calc.display = self.calc.value = (self.calc.value + '.' or "0.0")
+        
+        if event.key == "ctrl+h":
+            if self.calc.value != '0.0':
+                self.calc.display = self.calc.value = self.calc.value[0:len(self.calc.value)-1]
+
 
     async def on_mount(self) -> None:
         """Mount the calculator widget."""

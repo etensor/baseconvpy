@@ -14,12 +14,14 @@ class Conversor():
 
     def convert_decbase(self,num, base, prec=24):
         getcontext().prec = prec
+        if base == 10 or num == '0.0':
+            return num
         num = num.split('.')
         
         z,q = int(num[0]),float('0.'+num[1])
         result = ""
 
-        while (z > 1):
+        while (z >= 1):
             res = int(z%base)
             z  /= int(base)
             if (res > 9 and base > 10): 
@@ -44,7 +46,9 @@ class Conversor():
 
     def convert_to_dec(self,num,base,prec=24):
         getcontext().prec = prec
-        
+        if num == '0.0':
+            return num
+
         q = ''
         if '.' in num:
             num = num.split('.')
@@ -65,7 +69,7 @@ class Conversor():
             res += xi*(base**(len(z)-idxn-1))
             idxn+=1
 
-        result += str(res)
+        result += str(res) #if res != 0.0 else ''
 
         idxn = 0
         resq = 0.0
@@ -75,8 +79,9 @@ class Conversor():
                 if x == '.':
                     idxn+=1
                     continue
-                if (base > 10 and x in self.basedict.keys()):
+                if (x in self.basedict.keys()):
                     x = self.basedict[x]
+                    
                 xi = int(x)
                 resq += xi*(base**((idxn+1)*-1))
                 idxn+=1
@@ -91,10 +96,8 @@ class Conversor():
     # Maneras más óptimas existirán para directamente convertir de cualquier base
     # a cualquier otra. Seguimos buscándolas 
 
-    def convertirNM(self,num,bN,bM,prec=16):
+    def convertirNM(self,num,bN,bM,prec=18):
         return self.convert_decbase(self.convert_to_dec(num, bN,prec), bM,prec) if bN != bM else num
-
-
 
 
 #print(convert_to_dec('13F.A',16))

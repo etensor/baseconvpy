@@ -10,7 +10,9 @@ from decimal import getcontext
 # ----------------------------
 
 class Conversor():
-    exts = [chr(65+i) for i in range(6)]
+        
+    basedict = {chr(65+i): 10+i for i in range(6)}
+    exts = list(basedict.keys())
 
     def convert_decbase(self,num, base, prec=24):
         getcontext().prec = prec
@@ -42,7 +44,6 @@ class Conversor():
         #print(f"\t {num} -B{base}-> {result}")
         return result
 
-    basedict = {chr(65+i): 10+i for i in range(6)}
 
     def convert_to_dec(self,num,base,prec=24):
         getcontext().prec = prec
@@ -69,7 +70,8 @@ class Conversor():
             res += xi*(base**(len(z)-idxn-1))
             idxn+=1
 
-        result += str(res) #if res != 0.0 else ''
+        result += str(res)
+        
 
         idxn = 0
         resq = 0.0

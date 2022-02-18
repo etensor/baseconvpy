@@ -49,7 +49,7 @@ class FigletText:   # para autoescalar el texto
         """
         size = min(options.max_width / 2, options.max_height)
         if size < 4:
-            yield Text(self.text, style="bold")
+            yield Text(self.text, style="light")
         else:
             if size < 7:
                 font_name = "mini"
@@ -78,7 +78,7 @@ class EleganTexto(Widget):
         
         return Padding(
             Align.center(FigletText(self.texto), vertical="middle"),
-            (0, 0),
+            (0,2),
             style=self.style,
         )
 
@@ -333,7 +333,7 @@ class CalculatorApp(App):
     calc = Calculator()
 
     async def on_load(self) -> None:
-        await self.bind("g", "selectbase(10)", " DEC")
+        await self.bind("g", "selectbase(10)", " DEC ")
         await self.bind("h", "selectbase(2)", " BIN ")
         await self.bind("j", "selectbase(8)", " OCT ")
         await self.bind("k", "selectbase(16)", "HEX ")
@@ -371,7 +371,7 @@ class CalculatorApp(App):
             if "." not in self.calc.display or self.display == '':
                 self.calc.display = self.calc.value = (self.calc.value + '.' or "0.0")
         
-        if event.key == "ctrl+h":
+        if event.key == "ctrl+h": # === borrar (backspace)
             if self.calc.value != '0.0':
                 self.calc.display = self.calc.value = self.calc.value[0:len(self.calc.value)-1]
 

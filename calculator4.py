@@ -25,7 +25,7 @@ from textual.widget import Widget
 from textual.widgets import Button, ButtonPressed, Footer, Placeholder
 
 #from convb import convertirNM
-from convb2 import Conversor
+from convb3 import Conversor
 
 
 try:
@@ -102,7 +102,7 @@ class Numbers(Widget):
         return Padding(
             Align.center(FigletText(self.value), vertical="middle"),
             (0, 1),
-            style="rgb(230,160,3) on rgb(0,0,0)",
+            style="rgb(216,229,42) on rgb(0,0,0)",
         )
 
 
@@ -153,6 +153,14 @@ class Calculator(GridView):
                     self.baseT,
                     self.vect_bases[ix]
                     )
+        
+        num_dec = self.conversor.convertirNM(self.display,self.baseT,10)
+        if self.value not in ('', '0.0'):
+            self.ieee32num.value,s32 = self.conversor.dec_ieee3264(num_dec,mod=32)
+            self.ieee64num.value,s64 = self.conversor.dec_ieee3264(num_dec,mod=64)
+
+            self.exp32n.value,self.mnt32dec.value = self.conversor.ieee3264_2n(str(self.ieee32num.value),s32)
+            self.exp64n.value,self.mnt64dec.value = self.conversor.ieee3264_2n(str(self.ieee64num.value),s64)
 
 
     def compute_show_ac(self) -> bool:
@@ -181,12 +189,24 @@ class Calculator(GridView):
         self.bases = {10: True, 2: False, 8: False, 16: False}
         self.baseT = 2
         self.sel_base(10)
+
+        self.ieee32num = Numbers()
+        self.ieee64num = Numbers()
+        self.exp32n = Numbers()
+        self.exp64n = Numbers()
+        self.mnt32dec = Numbers()
+        self.mnt64dec = Numbers()
+        
+        self.modos = {
+            '32': EleganTexto('32 bit',"yellow on black"),
+            '64': EleganTexto('64 bit','yellow on black')
+            }
         
 
         self.emptyspc = EleganTexto("","white on rgb(0,0,0)")
 
         self.titulo = EleganTexto(
-            "Conversor de Bases", "rgb(0,100,60) on rgb(20,20,20)")
+            "Conversor de Bases: IEEE-754", "rgb(0,150,80) on rgb(20,20,20)")
 
         for i in range(len(self.numbers)):
             self.numbers[i].style_border = "bold"
@@ -216,7 +236,7 @@ class Calculator(GridView):
 
         # Create rows / columns / areas
         self.grid.add_column("col", max_size=30, repeat=8) 
-        self.grid.add_row("row", max_size=12, repeat=7)
+        self.grid.add_row("row", max_size=12, repeat=8)
         self.grid.add_areas(                     # <== if defined -> grid.place<->vincular
             clear="col1,row1",
             elim="col3,row1",
@@ -225,11 +245,21 @@ class Calculator(GridView):
             texto8="col4,row4",
             texto16="col4,row5",
             titulo="col4-start|col8-end,row1",
+            modo_32="col4,row6",
+            modo_64="col4,row7",
             numbers10="col5-start|col8-end,row2",
             numbers2="col5-start|col8-end,row3",
             numbers8="col5-start|col8-end,row4",
             numbers16="col5-start|col8-end,row5",
-            emptyspc="col4-start|col8-end,row6-start|row7-end",
+            num_32='col5-start|col8-end,row6',
+            num_64='col5-start|col8-end,row7',
+            exp32t='col1,row8',
+            exp64t='col4,row8',
+            mnt32t='col2-start|col3-end,row8',
+            mnt64t='col5-start|col8-end,row8',
+            
+            #emptyspc="col5-start|col8-end,row6-start|row7-end",
+
             zero="col1-start|col2-end,row7",
         )  # Posicionamiento de areas en la grid
         # Place out widgets in to the layout
@@ -244,15 +274,24 @@ class Calculator(GridView):
             texto2=self.textos['BIN'],
             texto8=self.textos['OCT'],
             texto16=self.textos['HEX'],
-            emptyspc=self.emptyspc,     # cambiar este
+            modo_32=self.modos['32'],
+            modo_64=self.modos['64'],
+            #emptyspc=self.emptyspc,     # cambiar este
             titulo=self.titulo,
             elim=self.elim,
+            num_32=self.ieee32num,
+            num_64=self.ieee64num,
+            exp32t=self.exp32n,
+            exp64t=self.exp64n,
+            mnt32t=self.mnt32dec,
+            mnt64t=self.mnt64dec,
             *self.buttons.values(),
             clear=self.ac,
             zero=self.zero
         )
     
         '''  Para seleccionar en que base ingresar el número '''
+
     
     def sel_base(self, b) -> None:
 
@@ -262,8 +301,7 @@ class Calculator(GridView):
         dact_style = "yellow on rgb(20,40,20)"
 
         self.bases[self.baseT] = False
-        self.textos[self.basedict[self.baseT]
-                    ].style = dact_style
+        self.textos[self.basedict[self.baseT]].style = dact_style
         
         self.bases[b] = True
         self.textos[self.basedict[b]].style = act_style
@@ -302,7 +340,7 @@ class Calculator(GridView):
             #self.display = self.value = self.value.lstrip("0") + button_name
         
         elif button_name == "+/-":
-            self.display = self.value = str(Decimal(self.value or "0") * -1)
+            self.display = self.value = str(Decimal(self.value or '0') * -1)
         elif button_name == ".":  # importante para solo agregar un .
             if "." not in self.value:
                 self.display = self.value = (self.value + '.' or "0.0")
@@ -370,6 +408,9 @@ class CalculatorApp(App):
         if event.key == '.':
             if "." not in self.calc.display or self.display == '':
                 self.calc.display = self.calc.value = (self.calc.value + '.' or "0.0")
+        
+        if event.key == '-':
+            self.calc.display = self.calc.value = str(Decimal(self.calc.value or '0') * -1)
         
         if event.key == "ctrl+h": # === borrar (backspace)
             if self.calc.value != '0.0':

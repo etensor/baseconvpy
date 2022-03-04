@@ -1,5 +1,6 @@
 from decimal import getcontext
 import re
+from sys import maxsize
 #getcontext().prec = 24 # 32 bit -> 23
         #ieee754        # 64 bit -> 53
                         # formato ieee754'
@@ -36,12 +37,13 @@ class Conversor():
         z,q = int(num[0]),float('0.'+num[1])
         
         aux = ''
-        while (z >= 1):
-            res = int(z%base)
-            z  /= int(base)
-            if (res > 9 and base > 10): 
-                aux += self.exts[res-10]
-            else: aux += str(res)
+        if z < int(maxsize):
+            while (z >= 1):
+                res = int(z%base)
+                z  /= int(base)
+                if (res > 9 and base > 10): 
+                    aux += self.exts[res-10]
+                else: aux += str(res)
         
         result += aux[::-1]
         if frac:
@@ -51,6 +53,9 @@ class Conversor():
         idx = 0
         while(q > 0  and idx < prec):
             res = q * base
+            if int(res) > len(self.exts)+10:
+                idx = prec
+                continue
             if (res > 9): result += self.exts[int(res)-10]
             else: result += str(int(res))
             q = round(res - int(res),prec)
@@ -140,7 +145,7 @@ class Conversor():
         else:
             res += '0'
         
-        num = self.convert_decbase(num,2,prec=mnt-5)
+        num = self.convert_decbase(num,2,prec=mnt-1)
         if '.' not in num:
             num += '.0'
         z,q = num.split('.')
@@ -163,7 +168,7 @@ class Conversor():
     def bin_ieee_dec(self,num,shift):
         return self.ieee3264_2n(self.dec_ieee3264(num),shift)
     
-    def ieee3264_2n(self,num,shift=0,baseT=16):
+    def ieee3264_2n(self,num,shift=0):
         if num in ('0.0',''):
             return '',''
 
@@ -173,17 +178,18 @@ class Conversor():
             expb = 8
             ds = 127
             mntb = 23
+            modo='32 bit: '
         elif len(num) == 65:
             expb = 11
             ds = 1023
             mntb = 52
+            modo='64 bit: '
         else: return '',''
      
         #exponente = ds + int(self.convertirNM(str(num[1:expb+1]),2,baseT))
         #exT = self.convertirNM(str(num[2:expb+2]), 2, baseT)
         aux_exp = self.convert_to_dec(str(num[2:expb+2]), 2, prec=expb)
         exp_dec = int(aux_exp[:len(aux_exp)-2]) - ds
-
 
         desnorm_mnt = '1'+str(num[expb+2:expb+2+shift] + '.' + num[expb+2+shift:])
         significando = '1.'+str(num[expb+2:]) #expb+2+shift] + '.' + num[expb+2+shift:])
@@ -194,14 +200,15 @@ class Conversor():
             )
 
         significando_dec = self.convert_to_dec(significando, 2)
-        #print(f"\nexp: {exp_dec}, significando DEC: {significando_dec}")
-        #print(f"DEC: {mnt_dec}  |  HEX: {self.convertirNM(desnorm_mnt,bN=2,bM=16) }")
-        return f"e:{exp_dec},s:{significando_dec}",str(mnt_dec)
+        #print(f"\nexp: {exp_dec}, significando DEC: {significando_dec}, DEC: {mnt_dec}")#,HEX: {self.convert_decbase(str(mnt_dec),16)} ")
+        #print(f"DEC: {mnt_dec}  |  HEX mnt : {self.convertirNM(desnorm_mnt,bN=2,bM=16) } \
+        #      HEX exp: {self.convertirNM((str(float(significando_dec)*2**exp_dec)), bN=10, bM=16)} ")  # Interesante que sean equivalentes
+        return f"e:{exp_dec},s:{significando_dec}",modo+str(mnt_dec)
         
 
 
 
-#'''   interactivo: 
+'''   interactivo: 
 numx = input('ingrese numero: ')
 #bN = int(input('de base N: '))
 #bM = int(input('a base M: '))
@@ -216,15 +223,12 @@ ie,lz = cc.dec_ieee3264(numx,mod=32)
 ie6,lz6 = cc.dec_ieee3264(numx,mod=64)
 
 print(f" DEC -> BIN -> IEEE : {ie}")
-print(cc.ieee3264_2n(ie, shift=lz , baseT=16))
-print(cc.ieee3264_2n(ie, shift=lz , baseT=8))
 
-
-print(cc.ieee3264_2n(ie6,shift=lz6, baseT=16))
-print(cc.ieee3264_2n(ie6,shift=lz6, baseT=8))
+print(cc.ieee3264_2n(ie ,shift=lz ))
+print(cc.ieee3264_2n(ie6,shift=lz6))
 
 #print(cc.dec_ieee3264(numx,mod=64))
 #print(cc.convertirNM(numx,bN,bM))
 #print(cc.dec_iiie32(numx))
 
-#'''
+'''

@@ -142,9 +142,8 @@ class Calculator(GridView):
         # This allows us to write self.display = "100" to update the display
         # =>> watch: update valor del display [   0.0   ]
         #self.numbers[0].value = convertirNM(self.value,self.baseT,2)
-
+        
         idx = self.getbaseT_idx()
-        print(idx)
         self.display = self.numbers[idx].value = value
         for ix in range(len(self.numbers)):
             if ix != idx:
@@ -161,6 +160,11 @@ class Calculator(GridView):
 
             self.exp32n.value,self.mnt32dec.value = self.conversor.ieee3264_2n(str(self.ieee32num.value),s32)
             self.exp64n.value,self.mnt64dec.value = self.conversor.ieee3264_2n(str(self.ieee64num.value),s64)
+        else:
+            self.ieee32num.value  = '0.0'
+            self.ieee64num.value = '0.0'
+            self.mnt32dec.value = '0.0'
+            self.mnt64dec.value = '0.0'
 
 
     def compute_show_ac(self) -> bool:

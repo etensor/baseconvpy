@@ -22,10 +22,11 @@ from textual.app import App
 from textual.reactive import Reactive
 from textual.views import GridView
 from textual.widget import Widget
-from textual.widgets import Button, ButtonPressed, Footer, Placeholder
+from textual.widgets import Button, ButtonPressed, Footer, ScrollView
 
 #from convb import convertirNM
 from convb3 import Conversor
+from docscalculadora import codigo_fuente
 
 
 try:
@@ -132,7 +133,6 @@ class Calculator(GridView):
 
     conversor = Conversor()
 
-
     vect_bases = [10,2,8,16]
 
     def watch_display(self, value: str) -> None:
@@ -142,7 +142,7 @@ class Calculator(GridView):
         # This allows us to write self.display = "100" to update the display
         # =>> watch: update valor del display [   0.0   ]
         #self.numbers[0].value = convertirNM(self.value,self.baseT,2)
-        
+    
         idx = self.getbaseT_idx()
         self.display = self.numbers[idx].value = value
         for ix in range(len(self.numbers)):
@@ -370,9 +370,9 @@ class Calculator(GridView):
 class CalculatorApp(App):
     """The Calculator Pro V2.0 Application"""
 
-    doc_size = 50
-    show_docs = Reactive(False)
+    doc_size = 65
     calc = Calculator()
+    bar : RenderableType
 
     async def on_load(self) -> None:
         await self.bind("g", "selectbase(10)", " DEC ")
@@ -382,16 +382,13 @@ class CalculatorApp(App):
         await self.bind("l", "act_docs", "Documentacion")
         await self.bind("q", "quit", " Salir ")
 
-    def watch_show_docs(self, show_docs: bool) -> None:
-        self.bar.animate("layout_offset_x", 0 if show_docs else -self.doc_size)
-
     def action_act_docs(self) -> None:
-        self.show_docs = not self.show_docs
+        self.bar.visible = not self.bar.visible
+        self.calc.visible = not self.bar.visible
 
     def action_selectbase(self, b) -> None:
         self.calc.sel_base(b)
         
-
     def on_key(self, event):
         idx = self.calc.getbaseT_idx()
 
@@ -424,12 +421,11 @@ class CalculatorApp(App):
     async def on_mount(self) -> None:
         """Mount the calculator widget."""
         footer = Footer()
-        self.bar = Placeholder(name="left")
-        self.show_docs = False
-        #self.calc.textos['']
+        self.bar = ScrollView(codigo_fuente,auto_width=True)
+        self.bar.visible = False
 
         await self.view.dock(self.calc, edge='top')
-        await self.view.dock(self.bar, edge='left', size=self.doc_size, z=1)
+        await self.view.dock(self.bar, edge='left', z=1)
         await self.view.dock(footer, edge='bottom', size=1, z=2)
         ###
 

@@ -1,16 +1,6 @@
-from decimal import getcontext
-import re
-from sys import maxsize
-#getcontext().prec = 24 # 32 bit -> 23
-        #ieee754        # 64 bit -> 53
-                        # formato ieee754'
+from rich.syntax import Syntax
 
-### -> b16 -> b2 -> b8 
-#  3 bits -> b8
-#  4 bits -> b16
-# | <-- primero |==> res[::-1]
-# ----------------------------
-
+codigo = '''
 
 class Conversor():
         
@@ -204,31 +194,14 @@ class Conversor():
         #print(f"DEC: {mnt_dec}  |  HEX mnt : {self.convertirNM(desnorm_mnt,bN=2,bM=16) } \
         #      HEX exp: {self.convertirNM((str(float(significando_dec)*2**exp_dec)), bN=10, bM=16)} ")  # Interesante que sean equivalentes
         return f"e:{exp_dec},s:{significando_dec}",modo+str(mnt_dec)
-        
-
-
-
-'''   interactivo: 
-numx = input('ingrese numero: ')
-#bN = int(input('de base N: '))
-#bM = int(input('a base M: '))
-numx = re.sub(r'[^\w.]','',numx)
-print(numx)
-
-cc = Conversor()
-
-print(cc.convert_decbase(numx,2))
-#print(cc.dec_ieee3264(numx))
-ie,lz = cc.dec_ieee3264(numx,mod=32)
-ie6,lz6 = cc.dec_ieee3264(numx,mod=64)
-
-print(f" DEC -> BIN -> IEEE : {ie}")
-
-print(cc.ieee3264_2n(ie ,shift=lz ))
-print(cc.ieee3264_2n(ie6,shift=lz6))
-
-#print(cc.dec_ieee3264(numx,mod=64))
-#print(cc.convertirNM(numx,bN,bM))
-#print(cc.dec_iiie32(numx))
 
 '''
+
+codigo_fuente = Syntax(
+    codigo, 
+    "python", 
+    theme="one-dark",
+    word_wrap=True,
+    indent_guides=True,
+    line_numbers=True
+    )

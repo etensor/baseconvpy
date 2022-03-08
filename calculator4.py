@@ -30,7 +30,7 @@ from docscalculadora import codigo_fuente
 
 
 try:
-    from pyfiglet import Figlet
+    from pyfiglet import Figlet,figlet_format
 except ImportError:
     print(" Error: -> pip install pyfiglet")
     raise
@@ -430,4 +430,16 @@ class CalculatorApp(App):
         ###
 
 
+print(figlet_format("basconvpy", font="banner3-D"))
+input('''\n\t\b-> Grupo 2:
+\n\t- David Penilla
+\n\t- Juan Camilo Bolaños
+\n\t- Sergio Andres Angel
+\n\t- Santiago Abadía
+\n\t- Jean Pierre Vargas
+\n\n - presione enter para continuar...''')
 CalculatorApp.run(title="Calculator Test", log="textual.log")
+
+
+
+    

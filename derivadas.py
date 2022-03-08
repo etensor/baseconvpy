@@ -33,6 +33,6 @@ def limF(f, xo, dir='+'):             # predet: lim x->xo+
 
 
 #print(integrarFuncion(sp.sin(x)*sp.exp(2*x),x))
-#print(derivarFuncion(sp.exp(x)*5*x**3,x))
+#print(derivarFuncion(sp.exp(x)*5*y**2*x**3*z,x,y,z))
 #print(derivadasFuncion(sp.exp(x)*5*x**3,x))
 #print(derivarFuncion(parse_expr('2*sin(x) + 2',evaluate=False),x))

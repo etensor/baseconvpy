@@ -68,7 +68,7 @@ if opt_menu == 'Derivadas':
             
             derivadas = derivadasFuncion(eq_funcion, x)
             for dfdx in derivadas:
-                st.latex(f"{dfdx[0]} \;=\; {dfdx[1]}")
+                st.latex(f"{dfdx[0]} \quad = \quad {dfdx[1]}")
         
             
 

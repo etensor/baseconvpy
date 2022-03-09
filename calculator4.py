@@ -9,31 +9,22 @@ entre los ejemplos del autor.
        --------------------
 
 """
-from typing import List
-from decimal import Decimal
-from time import sleep
 
+from decimal import Decimal
 from rich.align import Align
 from rich.console import Console, ConsoleOptions, RenderResult, RenderableType
 from rich.padding import Padding
 from rich.text import Text
-
 from textual.app import App
 from textual.reactive import Reactive
 from textual.views import GridView
 from textual.widget import Widget
 from textual.widgets import Button, ButtonPressed, Footer, ScrollView
+from pyfiglet import Figlet, figlet_format
 
-#from convb import convertirNM
 from convb3 import Conversor
 from docscalculadora import codigo_fuente
 
-
-try:
-    from pyfiglet import Figlet,figlet_format
-except ImportError:
-    print(" Error: -> pip install pyfiglet")
-    raise
 
 
 class FigletText:   # para autoescalar el texto
@@ -142,7 +133,7 @@ class Calculator(GridView):
         # This allows us to write self.display = "100" to update the display
         # =>> watch: update valor del display [   0.0   ]
         #self.numbers[0].value = convertirNM(self.value,self.baseT,2)
-    
+        
         idx = self.getbaseT_idx()
         self.display = self.numbers[idx].value = value
         for ix in range(len(self.numbers)):
@@ -432,11 +423,10 @@ class CalculatorApp(App):
 
 print(figlet_format("basconvpy", font="banner3-D"))
 input('''\n\t\b-> Grupo 2:
-\n\t- David Penilla
-\n\t- Juan Camilo Bolaños
-\n\t- Sergio Andres Angel
-\n\t- Santiago Abadía
-\n\t- Jean Pierre Vargas
+\n\t- David Penilla \t- Juan Camilo Bolaños\t- Santiago Abadía
+\n\t- Sergio Andrés Ángel\t- Jean Pierre Vargas
+\n\t--------------------------------------------------------------
+\n\t   Advertencia: intente no mantener presionada ninguna tecla.
 \n\n - presione enter para continuar...''')
 CalculatorApp.run(title="Calculator Test", log="textual.log")
 

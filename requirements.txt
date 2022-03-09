@@ -2,3 +2,5 @@ streamlit
 rich
 textual
 pyfiglet
+dash
+plotly

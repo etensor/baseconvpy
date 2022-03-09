@@ -1,19 +1,24 @@
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr,standard_transformations, implicit_multiplication_application
 
+
+# Las derivadas pimpam con parser para escribirlas sin cuento
+
 x, y, z = sp.symbols('x y z')
 transformations = (standard_transformations + (implicit_multiplication_application,))
 
 def derivarFuncion(f, *args):
     f = str(parse_expr(f,transformations= transformations))
     dfdxn = sp.Derivative(f, *args)
-    return sp.latex(dfdxn), sp.latex(dfdxn.doit())
+    print(str(dfdxn.doit()))
+    return sp.latex(dfdxn), sp.latex(dfdxn.doit()),dfdxn.doit()
 
 
 def derivadasFuncion(f,*args):
     return [derivarFuncion(f, f'{args[0]},{i}') for i in range(1, 4)] \
         if len(args) == 1 else \
         [derivarFuncion(f, *args[0:i+1]) for i in range(len(args))]
+
 
 def integrarFuncion(f, *args):
     F = sp.Integral(f, *args)

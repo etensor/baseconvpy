@@ -2,6 +2,11 @@ import streamlit as st
 from derivadas import *
 from plotter import plot_funcion
 from falsaposicion import falsa_pos
+import numpy as np
+import sympy as sp
+from matplotlib import pyplot as plt
+from met_biseccion import biseccion
+
 
 st.set_page_config(
     layout="wide",
@@ -28,7 +33,7 @@ def campo_numeros(numeros):
 
 opt_menu = st.sidebar.selectbox(
     "Navegador del proyecto",
-    ("Presentacion","Convertidor de Bases","Derivadas","Metodos")
+    ("Presentacion","Convertidor de Bases","Derivadas","Métodos")
 )
 st.sidebar.caption('Bienvenido.')
 
@@ -47,7 +52,8 @@ if opt_menu == "Presentacion":
 
 
 if opt_menu == "Convertidor de Bases":
-    st.subheader('Ingrese un numero en cualquier casilla')
+    st.warning('ADVERTENCIA: Funcionalidad impletada otra interfaz!')
+    st.write('Ingrese un numero en cualquier casilla')
     convertidor_bases = st.container()
 
     with convertidor_bases:
@@ -120,50 +126,95 @@ if opt_menu == 'Derivadas':
         #plot = plot_funcion('exp(x/3)*sin(x)')
         #st.plotly_chart(plot,use_container_width=True)
         
-if opt_menu == 'Metodos':
-    st.subheader('Falsa Posición')
+if opt_menu == 'Métodos':
 
-    funcion = st.text_input('Ingrese la función',
-                            value='exp(x-2)-log(x) -2.5')
-    a = int(st.text_input('Ingrese rango inferior: ',value='3'))
-    b = int(st.text_input('Ingrese rango superior: ',value='4'))
-    tol = float(st.text_input('Ingrese tolerancia:', value='0.0005'))
-
-    tabla,raices = falsa_pos(funcion,a,b,tol)
-    st.write('Acerca:')
-    col_expr, col_vals = st.columns(2)
+    menu_met = st.radio('Qué método usar? :',('Falsa Posición','Bisección','Raices de un polinomio'))
     
-    col_expr.latex(r'x_{a}')
-    col_vals.write('\n')
-    col_vals.write(' limite inferior')
-    col_expr.latex(r'x_{b}')
-    col_vals.write('\n')
-    col_vals.write(' limite superior')
-    col_expr.latex(r'x_{r}')
-    col_vals.write('\n')
-    col_vals.write(' raiz encontrada')
-    
+    if menu_met == 'Falsa Posición':
+        st.subheader('Falsa Posición')
+        funcion = st.text_input('Ingrese la función',
+                                value='exp(x-2)-log(x) -2.5')
+        a = int(st.text_input('Ingrese rango inferior: ',value='3'))
+        b = int(st.text_input('Ingrese rango superior: ',value='4'))
+        tol = float(st.text_input('Ingrese tolerancia:', value='0.0005'))
 
-    for i in range(0, len(tabla)):
-        st.write('------------------------------------------------------')
-        col_expr.write(f'Iteración #: {i+1} ')
-        col_expr.latex(r'x_{a},x_{r},x_{b}')
-        col_expr.write('\n')
-        col_expr.write('\n')
-        col_expr.write('\n')
-        col_vals.write(tabla[i, 0:3])
-        col_expr.write('\n')
-        col_expr.latex(r'f(x_{a}),f(x_{c}), f(x_{b}): ')
-        col_expr.write('\n')
-        col_vals.write(tabla[i, 3:6])
-        col_expr.write('\n')
-        col_expr.write('\n')
-        col_expr.markdown(
-            "<h6 style='text-align: center; color: Green;'>Error</h6>", unsafe_allow_html=True)
-        col_expr.markdown(
-            "<h6 style='text-align: center; color: Green;'>Raiz</h6>", unsafe_allow_html=True)
-        col_vals.write(raices[i])
-        col_vals.write(tabla[i,6])
+        tabla,raices = falsa_pos(funcion,a,b,tol)
+        st.write('Acerca:')
+        col_expr, col_vals = st.columns(2)
+        
+        col_expr.latex(r'x_{a}')
+        col_vals.write('\n')
+        col_vals.write(' limite inferior')
+        col_expr.latex(r'x_{b}')
+        col_vals.write('\n')
+        col_vals.write(' limite superior')
+        col_expr.latex(r'x_{r}')
+        col_vals.write('\n')
+        col_vals.write(' raiz encontrada')
+        
+
+        for i in range(0, len(tabla)):
+            st.write('------------------------------------------------------')
+            col_expr.write(f'Iteración #: {i+1} ')
+            col_expr.latex(r'x_{a},x_{r},x_{b}')
+            col_expr.write('\n')
+            col_expr.write('\n')
+            col_expr.write('\n')
+            col_vals.write(tabla[i, 0:3])
+            col_expr.write('\n')
+            col_expr.latex(r'f(x_{a}),f(x_{c}), f(x_{b}): ')
+            col_expr.write('\n')
+            col_vals.write(tabla[i, 3:6])
+            col_expr.write('\n')
+            col_expr.write('\n')
+            col_expr.markdown(
+                "<h6 style='text-align: center; color: Green;'>Error</h6>", unsafe_allow_html=True)
+            col_expr.markdown(
+                "<h6 style='text-align: center; color: Green;'>Raiz</h6>", unsafe_allow_html=True)
+            col_vals.write(raices[i])
+            col_vals.write(tabla[i,6])
+
+    if menu_met == 'Raices de un polinomio':
+        coefs = st.text_input('Ingrese los coeficientes de la función',
+                                value='1.25,-7.4,-10.43,25.86,-3.15')
+
+    
+        coefs = coefs.split(',')
+        coeficientes = [float(i) for i in coefs]
+
+        fx = np.poly1d(np.array(coefs))
+        xs = np.linspace(-10, 10, 200)
+
+        raices = np.roots(coefs)
+        idx = 0
+        textos,vals = st.columns(2)
+        for raiz in raices:
+            textos.latex(f'x_{{{idx}}}')
+            vals.write('\n')
+            vals.write(raiz)
+            idx+=1
+        
+        polinomio = np.poly1d(coeficientes)
+
+        fig, ax = plt.subplots()
+        ax.plot(xs, polinomio(xs))
+        st.subheader('Gráfica')
+        st.pyplot(fig)
+
+    if menu_met == 'Bisección':
+        funcion = st.text_input('Ingrese la función f(x) :', 
+        value='np.cos(x)-np.exp(-x**2) + 0.5')
+        
+        lim_inf = int(st.slider('Rango inferior', min_value=-
+                      50, max_value=50, value=-2))
+        lim_sup = int(st.slider('Rango superior', min_value=-
+                      50, max_value=50, value=3))
+        iter_max = int(st.number_input('Cuantas iteraciones? : ',min_value=0,max_value=50))
+
+        raiz_biseccion = biseccion(eval('lambda x: '+funcion),lim_inf,lim_sup,20)
+        
+        st.write(raiz_biseccion)
+
 
 #''' 
 #st.latex(r'\frac{df}{dx} \;=\; f\,\'(x) \;=\quad')

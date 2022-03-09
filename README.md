@@ -18,3 +18,12 @@ python calculator4.py
 ```zsh
 streamlit run basconv.py
 ```
+
+$$
+\frac{\partial^{4}}{\partial z^{2}\partial x^{2}} 3 x^{5} y z^{2} 120 x^{3} y
+$$
+
+
+$$
+\frac{\partial}{\partial x} 3 x^{5} y z^{2} 15 x^{4} y z^{2}, \frac{\partial^{2}}{\partial x^{2}} 3 x^{5} y z^{2},60 x^{3} y z^{2} \frac{\partial^{4}}{\partial z^{2}\partial x^{2}} 3 x^{5} y z^{2}, 120 x^{3} y
+$$

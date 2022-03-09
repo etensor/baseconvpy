@@ -201,6 +201,7 @@ if opt_menu == 'Métodos':
         st.subheader('Gráfica')
         st.pyplot(fig)
 
+
     if menu_met == 'Bisección':
         funcion = st.text_input('Ingrese la función f(x) :', 
         value='np.cos(x)-np.exp(-x**2) + 0.5')
@@ -214,6 +215,9 @@ if opt_menu == 'Métodos':
         raiz_biseccion = biseccion(eval('lambda x: '+funcion),lim_inf,lim_sup,20)
         
         st.write(raiz_biseccion)
+        st.subheader('Gráfica')
+        plot = plot_funcion(eval('lambda x: '+funcion),
+                            'x', lim_inf, lim_sup, modo=False)
 
 
 #''' 

@@ -254,11 +254,3 @@ class CalculatorApp(App):
 
 CalculatorApp.run(title="Calculator Test", log="textual.log")
 
-
-
-
-
-
-
-def printHello():
-    print('hello')

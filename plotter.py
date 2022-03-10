@@ -6,11 +6,12 @@ import plotly.express as px
 
 x,y,z,t,w,r = sp.symbols('x y z t w r')
 
-def plot_funcion(f,diff_var=['x'],xa : int =-10,xb: int =10):
+def plot_funcion(f,diff_var=['x'],xa : int =-10,xb: int =10,modo=True):
     fig = go.Figure()
 
-    f = sp.lambdify(sp.symbols(*diff_var), f, 'numpy')
-
+    if modo:
+        f = sp.lambdify(sp.symbols(*diff_var), f, 'numpy')
+ 
     xs = np.linspace(xa,xb,400)
     df = pd.DataFrame(
         dict(

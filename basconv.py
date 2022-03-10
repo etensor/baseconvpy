@@ -218,7 +218,7 @@ if opt_menu == 'Métodos':
         st.subheader('Gráfica')
         plot = plot_funcion(eval('lambda x: '+funcion),
                             'x', lim_inf, lim_sup, modo=False)
-
+        st.plotly_chart(plot)
 
 #''' 
 #st.latex(r'\frac{df}{dx} \;=\; f\,\'(x) \;=\quad')

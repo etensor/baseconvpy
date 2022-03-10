@@ -121,8 +121,8 @@ class Calculator(GridView):
     display = Reactive("0")
     show_ac = Reactive(True)
 
-
     conversor = Conversor()
+    modo = ['NORMAL','32','64']
 
     vect_bases = [10,2,8,16]
 
@@ -370,6 +370,8 @@ class CalculatorApp(App):
         await self.bind("h", "selectbase(2)", " BIN ")
         await self.bind("j", "selectbase(8)", " OCT ")
         await self.bind("k", "selectbase(16)", "HEX ")
+        await self.bind('n','act_ieee32','IEEE32')
+        await self.bind('m', 'act_ieee64', 'IEEE64')
         await self.bind("l", "act_docs", "Documentacion")
         await self.bind("q", "quit", " Salir ")
 

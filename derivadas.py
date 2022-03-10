@@ -10,7 +10,6 @@ transformations = (standard_transformations + (implicit_multiplication_applicati
 def derivarFuncion(f, *args):
     f = str(parse_expr(f,transformations= transformations))
     dfdxn = sp.Derivative(f, *args)
-    print(str(dfdxn.doit()))
     return sp.latex(dfdxn), sp.latex(dfdxn.doit()),dfdxn.doit()
 
 

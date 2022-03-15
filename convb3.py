@@ -1,6 +1,8 @@
 from decimal import getcontext
 import re
 from sys import maxsize
+
+from sympy import exp
 #getcontext().prec = 24 # 32 bit -> 23
         #ieee754        # 64 bit -> 53
                         # formato ieee754'
@@ -165,27 +167,32 @@ class Conversor():
         return res,shift
 
 
-    def bin_ieee_dec(self,num,shift):
-        return self.ieee3264_2n(self.dec_ieee3264(num),shift)
+    def bin_ieee_dec_shift(self,num,mod=32): # funcion para poder extraer bien el shift del exponente que define el entero
+        exp_c = 8 if mod == 32 else 11
+        shift_m = 0
+        for i in range(1,exp_c+1):
+            if num[i] == '1':
+                shift_m += 2**(exp_c-i)
+        return int(shift_m) - 127 if mod == 32 else int(shift_m) - 1023
+        
     
+
     def ieee3264_2n(self,num,shift=0):
         if num in ('0.0',''):
             return '',''
 
         num = num.replace(' ','')
 
-        if len(num) == 33:
+        if len(num) in (32,33):
             expb = 8
             ds = 127
             mntb = 23
-            modo='32 bit: '
-        elif len(num) == 65:
+        elif len(num) in (64,65):
             expb = 11
             ds = 1023
             mntb = 52
-            modo='64 bit: '
         else: return '',''
-     
+
         #exponente = ds + int(self.convertirNM(str(num[1:expb+1]),2,baseT))
         #exT = self.convertirNM(str(num[2:expb+2]), 2, baseT)
         aux_exp = self.convert_to_dec(str(num[2:expb+2]), 2, prec=expb)
@@ -198,12 +205,17 @@ class Conversor():
             num = desnorm_mnt,
             base= 2 ,prec=mntb
             )
+        if num[0] == '1':
+            mnt_dec = '-'+mnt_dec
 
         significando_dec = self.convert_to_dec(significando, 2)
         #print(f"\nexp: {exp_dec}, significando DEC: {significando_dec}, DEC: {mnt_dec}")#,HEX: {self.convert_decbase(str(mnt_dec),16)} ")
         #print(f"DEC: {mnt_dec}  |  HEX mnt : {self.convertirNM(desnorm_mnt,bN=2,bM=16) } \
         #      HEX exp: {self.convertirNM((str(float(significando_dec)*2**exp_dec)), bN=10, bM=16)} ")  # Interesante que sean equivalentes
-        return f"e:{exp_dec},s:{significando_dec}",modo+str(mnt_dec)
+        return f"e:{exp_dec},s:{significando_dec}", str(mnt_dec)
+
+    #def ieee3264_dec(self,num,shift):
+    #    return self.ieee3264_2n(num,shift)[1]
         
 
 

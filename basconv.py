@@ -155,7 +155,7 @@ if opt_menu == 'Métodos':
 
         for i in range(0, len(tabla)):
             st.write('------------------------------------------------------')
-            col_expr.write(f'Iteración #: {i+1} ')
+            col_expr.write(f'Iteración #{i+1}: ')
             col_expr.latex(r'x_{a},x_{r},x_{b}')
             col_expr.write('\n')
             col_expr.write('\n')

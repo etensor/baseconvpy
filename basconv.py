@@ -1,3 +1,5 @@
+from unicodedata import decimal
+from itsdangerous import base64_decode
 import streamlit as st
 from derivadas import *
 from plotter import plot_funcion
@@ -6,6 +8,9 @@ import numpy as np
 import sympy as sp
 from matplotlib import pyplot as plt
 from met_biseccion import biseccion
+from conversor import conversor
+from conversor import floatingPoint
+import numpy as np
 
 
 st.set_page_config(
@@ -52,23 +57,66 @@ if opt_menu == "Presentacion":
 
 
 if opt_menu == "Convertidor de Bases":
-    st.warning('ADVERTENCIA: Funcionalidad impletada otra interfaz!')
-    st.write('Ingrese un numero en cualquier casilla')
-    convertidor_bases = st.container()
+    #st.warning('ADVERTENCIA: Funcionalidad impletada otra interfaz!')
+    st.write('Conversor de bases')
+    #convertidor_bases = st.container()
 
-    with convertidor_bases:
-        with st.expander(' Convertidor de Bases ',True):
-            col_text, col_nums = st.columns(2)
+    menu_met = st.radio('Base :',('Decimal','Binaria','Octal', 'Hexadecimal'))
+    #Bases
+    if menu_met == 'Decimal':
+        base = 10
+    
+    if menu_met == 'Binaria':
+        base = 2
+    
+    if menu_met == 'Octal':
+        base = 8
 
-            with col_text:
-                texbox(r'''B_{10} \; : ''')
-                texbox(r'''B_{2} \; : ''')
-                texbox(r'''B_{8} \; : ''')
-                texbox(r'''B_{16} \; : ''')
+    if menu_met == 'Hexadecimal':
+        base = 16
+
+    #Entrada del numero
+    numero = st.text_input("Escribe el numero en la base que seleccionaste", key=int)
+
+    if numero != '':
+        negativo = False
+        if numero[0] == '-':
+            numero = numero[1:]
+            negativo = True
+        binario, octal, decimal, hexadecimal = conversor(numero, base)
+
+        if negativo == True:
+            ptoflotante, expontente, mantisa = floatingPoint(float(decimal)*-1)
+            st.success(f'Binario: -{binario}')
+            st.success(f'Octal: -{octal}')
+            st.success(f'Decimal: -{decimal}')
+            st.success(f'Hexadecimal: -{hexadecimal}')
+        else:
+            ptoflotante, expontente, mantisa = floatingPoint(float(decimal))
+            st.success(f'Binario: {binario}')
+            st.success(f'Octal: {octal}')
+            st.success(f'Decimal: {decimal}')
+            st.success(f'Hexadecimal: {hexadecimal}')
+
+        st.success(f'Punto flotante: {ptoflotante}')
+        st.success(f'Exponente: {expontente}')
+        st.success(f'Mantisa:  {mantisa}')
+
+
+
+    #with convertidor_bases:
+    #    with st.expander(' Convertidor de Bases ',True):
+    #        col_text, col_nums = st.columns(2)
+
+    #        with col_text:
+    #            texbox(r'''B_{10} \; : ''')
+    #            texbox(r'''B_{2} \; : ''')
+    #            texbox(r'''B_{8} \; : ''')
+    #            texbox(r'''B_{16} \; : ''')
 
             
-            with col_nums:
-                campo_numeros([0,0,0,0])
+    #        with col_nums:
+    #            campo_numeros([0,0,0,0])
 
 
 
@@ -155,7 +203,7 @@ if opt_menu == 'Métodos':
 
         for i in range(0, len(tabla)):
             st.write('------------------------------------------------------')
-            col_expr.write(f'Iteración #{i+1}: ')
+            col_expr.write(f'Iteración #: {i+1} ')
             col_expr.latex(r'x_{a},x_{r},x_{b}')
             col_expr.write('\n')
             col_expr.write('\n')

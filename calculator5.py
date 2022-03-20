@@ -20,7 +20,10 @@ from textual.reactive import Reactive
 from textual.views import GridView
 from textual.widget import Widget
 from textual.widgets import Button, ButtonPressed, Footer, ScrollView
+from textual import events
 from pyfiglet import Figlet, figlet_format
+import pyperclip
+from typing import Callable
 
 from convb3 import Conversor
 from docscalculadora import codigo_fuente
@@ -59,31 +62,59 @@ class EleganTexto(Widget):
 
     texto = ""
     style = Reactive("")
+    mouse_over = Reactive(False)
+    fx : Callable = print('\n')
+    base : int = 0
+    
 
-    def __init__(self, texto, style="yellow on rgb(20,40,20)"):
+    def __init__(self, texto, style="yellow on rgb(20,40,20)", funcional=False,func_x='',bT : int = 0):
         super().__init__()
         self.texto = texto
         self.style = style
+        if funcional:
+            self.fx = func_x
+            self.base = bT
+    
+    async def on_enter(self, event: events.Enter) -> None:
+        self.mouse_over = True
+
+    async def on_leave(self, event: events.Leave) -> None:
+        self.mouse_over = False
+
+    async def on_focus(self, event: events.Focus) -> None:
+        if self.base != 0:
+            self.fx(self.base)
+        else:
+            pass
 
 
     def render(self) -> RenderableType:
         
         return Padding(
             Align.center(FigletText(self.texto), vertical="middle"),
-            (0,2),
-            style=self.style,
+            (0,1),
+            style=self.style if not self.mouse_over else 'white on blue',
         )
 
 
 class Numbers(Widget):
-    """The digital display of the calculator.
-
-        Aqui tomamos 4 para las bases 2,8,10,16
-
+    """digital display
+        Aqui tomamos 4 para las bases 2,8,10,16 y IEEE754 - 32,64 bits
     """
 
     value = Reactive("0.0")
-    base = ""
+    mouse_over = Reactive(False)
+
+    async def on_enter(self, event: events.Enter) -> None:
+        self.mouse_over = True
+
+    async def on_leave(self, event: events.Leave) -> None:
+        self.mouse_over = False
+
+    async def on_focus(self,event: events.Focus) -> None:
+        self.has_focus = True
+        pyperclip.copy(self.value)
+
     
     def render(self) -> RenderableType:
         """Build a Rich renderable to render the calculator display.
@@ -94,7 +125,8 @@ class Numbers(Widget):
         return Padding(
             Align.center(FigletText(self.value), vertical="middle"),
             (0, 1),
-            style="rgb(216,229,42) on rgb(0,0,0)",
+            style="rgb(236,206,0) on rgb(0,0,0)" \
+            if not self.mouse_over else "white on rgb(50,50,50)",
         )
 
 
@@ -136,7 +168,7 @@ class Calculator(GridView):
 
         if self.modo_c == 'estandar':
             idx = self.getbaseT_idx()
-            if idx < 3:
+            if idx <= 3:
                 self.display = self.numbers[idx].value = value
   
             for ix in range(len(self.numbers)):
@@ -152,8 +184,12 @@ class Calculator(GridView):
                 self.ieee32num.value,s32 = self.conversor.dec_ieee3264(num_dec,mod=32)
                 self.ieee64num.value,s64 = self.conversor.dec_ieee3264(num_dec,mod=64)
 
-                self.exp32n.value,self.mnt32dec.value = self.conversor.ieee3264_2n(str(self.ieee32num.value),s32)
-                self.exp64n.value,self.mnt64dec.value = self.conversor.ieee3264_2n(str(self.ieee64num.value),s64)    
+                self.exp32n.value,aux32 = self.conversor.ieee3264_2n(str(self.ieee32num.value),s32)
+                self.exp64n.value,aux64 = self.conversor.ieee3264_2n(str(self.ieee64num.value),s64)    
+
+                self.mnt32dec.value = '32bit: '+aux32
+                self.mnt64dec.value = '64bit: '+aux64
+
             else:
                 self.ieee32num.value= '0'
                 self.ieee64num.value= '0'
@@ -163,27 +199,56 @@ class Calculator(GridView):
 
         elif self.modo_c == '32bit':
             shift_m = self.conversor.bin_ieee_dec_shift(
-                self.value + '0'*(32-len(value)), 32)
+                self.value + '0'*(33-len(value)), 32)
 
             _,dec_num = self.conversor.ieee3264_2n(
-                self.value + '0'*(32-len(value)),
+                self.value + '0'*(33-len(value)),
                 shift=shift_m
             )
 
             self.numbers[0].value = dec_num
-            print(dec_num)
+            #print(dec_num)
             for idx in range(1,4):
-                self.numbers[idx].value = self.conversor.convertirNM(dec_num,10,
-                self.vect_bases[idx])
+                self.numbers[idx].value = self.conversor.convertirNM(dec_num,10,self.vect_bases[idx])
             
-            #self.numbers[3].value = f'{len(value)}, {len(self.value)}, {len(self.display)}'
 
-            self.ieee32num.value = self.value + '0'*(32-len(value))
-            self.ieee32num.value = f'{self.ieee32num.value[0]} {self.ieee32num.value[1:9]} {self.ieee32num.value[9:]}'
+            ieee64 = self.conversor.dec_ieee3264(dec_num,64)[0].replace(' ','')
+            ieee64 += '0'*(64-len(ieee64))
+
+            self.ieee32num.value = self.value + '0'*(33-len(value))
+            self.ieee32num.value = f'{self.ieee32num.value[0]} {self.ieee32num.value[1:10]} {self.ieee32num.value[10:]}'
+            self.ieee64num.value = f'{ieee64[0]} {ieee64[1:13]} {ieee64[13:]}'
+            self.exp32n.value,self.mnt32dec.value  = (str(shift_m),f'32 bits: {dec_num}')
+            self.exp64n.value, self.mnt64dec.value = self.conversor.ieee3264_2n(self.value + '0'*(33-len(value)), shift=self.conversor.bin_ieee_dec_shift(
+                self.value + '0'*(33-len(value)), 32))
+
+        elif self.modo_c == '64bit':
+            shift_m = self.conversor.bin_ieee_dec_shift(
+                self.value + '0'*(65-len(value)), 64)
+
+            _,dec_num = self.conversor.ieee3264_2n(
+                self.value + '0'*(65-len(value)),
+                shift=shift_m
+            )
+
+            self.numbers[0].value = dec_num
+            #print(dec_num)
+            for idx in range(1, 4):
+                self.numbers[idx].value = self.conversor.convertirNM(dec_num, 10,self.vect_bases[idx])
+
+
+            ieee32 = self.conversor.dec_ieee3264(dec_num, 32)[0].replace(' ','')
+            ieee32 += '0'*(32-len(ieee32))
+
+            self.ieee64num.value = self.value + '0'*(65-len(value))
+            self.ieee64num.value = f'{self.ieee64num.value[0]} {self.ieee64num.value[1:12]} {self.ieee64num.value[12:]}'
+            self.ieee32num.value = f'{ieee32[0]} {ieee32[1:9]} {ieee32[9:]}'
+            self.exp64n.value, self.mnt64dec.value = (str(shift_m), f'64 bits: {dec_num}')
+            self.exp32n.value, self.mnt32dec.value = self.conversor.ieee3264_2n(self.value + '0'*(65-len(value)), shift=self.conversor.bin_ieee_dec_shift(
+                self.value + '0'*(65-len(value)), 64))
          
 
         return None
-
 
 
 
@@ -206,13 +271,13 @@ class Calculator(GridView):
         # The calculator display
         # button : BIN -> B_2 , ...
         self.basedict = {10: 'DEC', 2: 'BIN', 8: 'OCT', 16: 'HEX', 32: '32bit', 64: '64bit'}
-        self.textos = {base: EleganTexto(base)
-                       for base in self.basedict.values()}
+        self.textos = {base: EleganTexto(base,funcional=True,func_x=self.sel_base,bT = val) \
+                       for val,base in self.basedict.items()}
         self.numbers = [Numbers() for i in range(4)] # ieee32,64 ->- ++ DECBINOCTHEX o [a,b],[u,v,...]
         self.ieee32num = Numbers()
         self.ieee64num = Numbers()
 
-        self.bases = {10: True, 2: False, 8: False, 16: False, 32: False, 64: False}
+        self.bases = {10: False, 2: True, 8: False, 16: False, 32: False, 64: False}
         self.baseT = 2
         self.sel_base(10)
 
@@ -221,9 +286,6 @@ class Calculator(GridView):
         self.exp64n = Numbers()
         self.mnt32dec = Numbers()
         self.mnt64dec = Numbers()
-        
-
-        self.emptyspc = EleganTexto("","white on rgb(0,0,0)")
 
         self.titulo = EleganTexto(
             "Conversor de Bases: IEEE-754", "rgb(0,150,80) on rgb(20,20,20)")
@@ -277,9 +339,6 @@ class Calculator(GridView):
             exp64t='col4,row8',
             mnt32t='col2-start|col3-end,row8',
             mnt64t='col5-start|col8-end,row8',
-            
-            #emptyspc="col5-start|col8-end,row6-start|row7-end",
-
             zero="col1-start|col2-end,row7",
         )  # Posicionamiento de areas en la grid
         # Place out widgets in to the layout
@@ -313,12 +372,10 @@ class Calculator(GridView):
 
     
     def sel_base(self, b) -> None:
-        if self.baseT == b:
-            return None
+        if b in (32, 64):
+            self.modo_c = f'{b}bit'
         
-        if b in (32,64):
-            self.modo_c = '32bit' if b == 32 else '64bit'
-        elif b <=16:
+        if b <=16:
             self.modo_c = 'estandar'
 
         act_style = "black on rgb(210,210,210)"
@@ -327,44 +384,37 @@ class Calculator(GridView):
         self.bases[self.baseT] = False
         self.textos[self.basedict[self.baseT]].style = dact_style
         
+        self.bases[b] = True if not self.bases[b] else False
+        self.textos[self.basedict[b]].style = act_style if self.bases[b] else dact_style
+        if self.bases[b] == True:
+            self.baseT = b if b <= 16 else 16
+        else:
+            self.baseT = 10
+            self.bases[10] = True
+            self.textos[self.basedict[10]].style = act_style
+            self.modo_c = 'estandar'
         
-        self.bases[b] = True
-        self.textos[self.basedict[b]].style = act_style
-        self.baseT = b if b <= 16 else self.baseT
 
         idx = self.getbaseT_idx()
-        if idx != b and idx < 4:
+        if idx != b and idx <= 3:
             self.value = self.numbers[idx].value
         
         if idx == 4:
-            self.value = self.ieee32num.value.replace(' ', '').replace('.','')
-            shift_m = self.conversor.bin_ieee_dec_shift(
-                self.value + '0'*(32-len(self.value)), 32)
-            self.value = f'{self.value[0:shift_m+2]}.{self.value[shift_m+2:]}'
-            
-            
-            if self.value not in ('0.0','0',''):
-                aux = self.conversor.convert_to_dec(
-                    self.value, self.baseT, prec=32)
-                self.value = self.ieee32num.value = self.conversor.dec_ieee3264(aux, mod=32)[0]
-                self.ieee64num.value = self.conversor.dec_ieee3264(aux,mod=64)[0]
-
+            if self.value not in ('0.0', '0', ''):
+                self.display = self.value = self.conversor.dec_ieee3264(self.numbers[0].value,mod=32)[0].replace(' ','')
+                self.ieee32num.value = f'{self.value[0]} {self.value[1:10]} {self.value[10:]}'
         
+
         if idx == 5:
-            #aux = self.ieee32num.value.replace(' ','').replace('.','')
-            #aux = f'{aux[0]}.{aux[1:]}'
-            aux = self.conversor.convert_to_dec(
-                self.value, self.baseT, prec=(32 if idx==4 else 64))
-            if self.value != '':             
-                self.ieee64num.value = self.conversor.dec_ieee3264(aux,mod=64)[0]
-            
-
-
-
+            if self.value not in ('0.0', '0', ''):
+                self.display = self.value = self.conversor.dec_ieee3264(self.numbers[0].value, mod=64)[0].replace(' ','')
+                self.ieee64num.value = f'{self.value[0]} {self.value[1:13]} {self.value[13:]}'
+        
+       
 
 
     def getbaseT_idx(self):
-        idx : int
+        idx : int = -1
         for i, x in enumerate(self.bases.values()):
             if x:
                 idx = i
@@ -385,7 +435,8 @@ class Calculator(GridView):
         if button_name.isdigit():
             i = int(button_name)
             if (self.baseT == 8 and i > 7) \
-            or (self.baseT == 2 and i > 1):
+            or ((self.baseT == 2 or self.modo_c != 'estandar') and i > 1) \
+            or (self.modo_c != 'estandar' and len(self.value) >= int(self.modo_c[0:2])+1 ):
                 pass
             else:
                 self.display = self.value = self.value + button_name
@@ -396,13 +447,10 @@ class Calculator(GridView):
                 if self.ieee32num.value[0] == '0':
                     self.ieee32num.value[0] = '1'
                     self.ieee64num.value[0] = '1'
-                    #self.ieee32num.value = '1' + self.ieee32num.value[1:]
-                    #self.ieee64num.value = '1' + self.ieee64num.value[1:]
                 elif self.ieee32num.value[0]== '1':
-                    #self.ieee32num.value = '0' + self.ieee32num.value[1:]
-                    #self.ieee64num.value = '0' + self.ieee64num.value[1:]
                     self.ieee32num.value[0] = '0'
                     self.ieee64num.value[0] = '0'
+
                 self.display = self.value + ''
             elif self.modo_c == 'estandar':
                 self.display = self.value = str(Decimal(self.value or '0') * -1)           
@@ -419,7 +467,7 @@ class Calculator(GridView):
             self.value = ""
             self.display = "0.0"
 
-        elif button_name in ('A','B','C','D','E','F'):
+        elif button_name in ('A','B','C','D','E','F') and self.modo_c == 'estandar':
             if self.baseT > 10:
                 self.display = self.value = self.value.lstrip("0") + button_name
 
@@ -450,8 +498,6 @@ class CalculatorApp(App):
     
 
     def action_act_ieee(self,modo) -> None:
-        self.calc.modo_c = f'{modo}bit'
-        #self.calc.display = self.calc.value = ''
         self.calc.sel_base(modo)
     
 
@@ -468,14 +514,17 @@ class CalculatorApp(App):
         if event.key.isdigit():
             i = int(event.key)
             if (self.calc.baseT == 8 and i > 7) \
-                or (self.calc.baseT == 2 and i > 1):
+                or ((self.calc.baseT == 2 or self.calc.modo_c != 'estandar') and i > 1) \
+                or (self.calc.baseT in (32, 64) and i > 1) \
+                or (self.calc.modo_c != 'estandar' and len(self.calc.value) >= int(self.calc.modo_c[0:2])+1):
                 pass
             else:
                 self.calc.display = self.calc.value = self.calc.value + event.key
                 #self.calc.numbers[idx].value = self.calc.display
 
-        if event.key in ('a', 'b', 'c', 'd', 'e', 'f') or event.key in ('A','B','C','D','E','F'):
-            if self.calc.baseT > 10:
+        if self.calc.modo_c == 'estandar' and \
+             event.key in ('a', 'b', 'c', 'd', 'e', 'f') or event.key in ('A','B','C','D','E','F'):
+            if self.calc.baseT > 10 and self.calc.baseT < 17:
                 self.calc.display = self.calc.value = self.calc.value + event.key.upper()
                 #self.calc.numbers[idx].value = self.calc.display
         
@@ -511,17 +560,20 @@ class CalculatorApp(App):
         await self.view.dock(self.calc, edge='top')
         await self.view.dock(self.bar, edge='left', z=1)
         await self.view.dock(footer, edge='bottom', size=1, z=2)
-        ###
+        ###W
 
+
+ccs = Console()
 
 print(figlet_format("basconvpy", font="banner3-D"))
-input('''\n\t\b-> Grupo 2:
-\n\t- David Penilla \t- Juan Camilo Bolaños\t- Santiago Abadía
-\n\t- Sergio Andrés Ángel\t- Jean Pierre Vargas
-\n\t--------------------------------------------------------------
-\n\t   Advertencia: intente no mantener presionada ninguna tecla.
-\n\n - presione enter para continuar...''')
-CalculatorApp.run(title="Calculator Test", log="textual.log")
+print('''\t\b-> Grupo 2:
+\n\t  David Penilla - Juan Camilo Bolaños - Santiago Abadía - Sergio Andrés Ángel - Jean Pierre Vargas
+\n\t----------------------------------------------------------------------------------------------------
+''')
+ccs.print('\tAdvertencia:\n\t   Intente no mantener presionada ninguna tecla.',style='red')
+ccs.print('\n\tNota:\n\t   Presione en los resultados para copiar su valor.',style='green')
+input('\n\n - presione enter para continuar...')
+CalculatorApp.run(title="Calculadora IEEE754", log="textual.log")
 
 
 

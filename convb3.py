@@ -1,8 +1,6 @@
 from decimal import getcontext
-import re
+#import re
 from sys import maxsize
-
-from sympy import exp
 #getcontext().prec = 24 # 32 bit -> 23
         #ieee754        # 64 bit -> 53
                         # formato ieee754'
@@ -70,7 +68,9 @@ class Conversor():
 
     def convert_to_dec(self,num,base,prec=16):
         getcontext().prec = prec
-        if num in('0.0',''):
+        if num == '':
+            num = '0.0'
+        if num == '0.0' or base == 10:
             return num
 
         if '.' not in num:
@@ -170,6 +170,9 @@ class Conversor():
     def bin_ieee_dec_shift(self,num,mod=32): # funcion para poder extraer bien el shift del exponente que define el entero
         exp_c = 8 if mod == 32 else 11
         shift_m = 0
+        num = num.replace(' ','').replace('.','')
+        if len(num) != 32:
+            return 0
         for i in range(1,exp_c+1):
             if num[i] == '1':
                 shift_m += 2**(exp_c-i)
@@ -181,13 +184,13 @@ class Conversor():
         if num in ('0.0',''):
             return '',''
 
-        num = num.replace(' ','')
+        num = num.replace(' ','').replace('.','')
 
-        if len(num) in (32,33):
+        if len(num) == 32:
             expb = 8
             ds = 127
             mntb = 23
-        elif len(num) in (64,65):
+        elif len(num) == 64:
             expb = 11
             ds = 1023
             mntb = 52
@@ -195,11 +198,13 @@ class Conversor():
 
         #exponente = ds + int(self.convertirNM(str(num[1:expb+1]),2,baseT))
         #exT = self.convertirNM(str(num[2:expb+2]), 2, baseT)
-        aux_exp = self.convert_to_dec(str(num[2:expb+2]), 2, prec=expb)
+        aux_exp = self.convert_to_dec(str(num[1:expb+1]), 2, prec=expb)
         exp_dec = int(aux_exp[:len(aux_exp)-2]) - ds
+        
 
-        desnorm_mnt = '1'+str(num[expb+2:expb+2+shift] + '.' + num[expb+2+shift:])
-        significando = '1.'+str(num[expb+2:]) #expb+2+shift] + '.' + num[expb+2+shift:])
+        # if '.' != num[0]
+        desnorm_mnt = '1'+str(num[expb+1:expb+1+shift] + '.' + num[expb+1+shift:])
+        significando = '1.'+str(num[expb+1:]) #expb+2+shift] + '.' + num[expb+2+shift:])
 
         mnt_dec = self.convert_to_dec(
             num = desnorm_mnt,

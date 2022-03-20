@@ -4,3 +4,5 @@ textual
 pyfiglet
 dash
 plotly
+ibm2ieee
+pyperclip

@@ -17,7 +17,7 @@ class Conversor():
     basedict = {chr(65+i): 10+i for i in range(6)}
     exts = list(basedict.keys())
 
-    def convert_decbase(self,num, base, prec=16):
+    def convert_decbase(self,num, base, prec=24):
         if num == '' or len(num) == 0:
             return num
         getcontext().prec = prec
@@ -66,7 +66,7 @@ class Conversor():
         return result
 
 
-    def convert_to_dec(self,num,base,prec=16):
+    def convert_to_dec(self,num,base,prec=24):
         getcontext().prec = prec
         if num == '':
             num = '0.0'
@@ -171,7 +171,7 @@ class Conversor():
         exp_c = 8 if mod == 32 else 11
         shift_m = 0
         num = num.replace(' ','').replace('.','')
-        if len(num) != 32:
+        if len(num) != mod:
             return 0
         for i in range(1,exp_c+1):
             if num[i] == '1':

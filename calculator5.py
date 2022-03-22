@@ -48,9 +48,9 @@ class FigletText:   # para autoescalar el texto
         else:
             if size < 7:
                 font_name = "mini"
-            elif size < 8:
+            elif size < 9:
                 font_name = "small"
-            elif size < 10:
+            elif size < 12:
                 font_name = "standard"
             else:
                 font_name = "big"
@@ -63,11 +63,11 @@ class EleganTexto(Widget):
     texto = ""
     style = Reactive("")
     mouse_over = Reactive(False)
-    fx : Callable = print('\n')
+    fx : Callable #= print # depronto una funcion primitiva mas liviana
     base : int = 0
     
 
-    def __init__(self, texto, style="yellow on rgb(20,40,20)", funcional=False,func_x='',bT : int = 0):
+    def __init__(self, texto, style="yellow on rgb(20,40,20)", funcional=False,func_x: Callable=str(),bT : int = 0):
         super().__init__()
         self.texto = texto
         self.style = style
@@ -85,7 +85,7 @@ class EleganTexto(Widget):
         if self.base != 0:
             self.fx(self.base)
         else:
-            pass
+            pass # a menos que se use para otro proposito
 
 
     def render(self) -> RenderableType:
@@ -207,7 +207,6 @@ class Calculator(GridView):
             )
 
             self.numbers[0].value = dec_num
-            #print(dec_num)
             for idx in range(1,4):
                 self.numbers[idx].value = self.conversor.convertirNM(dec_num,10,self.vect_bases[idx])
             
@@ -218,7 +217,7 @@ class Calculator(GridView):
             self.ieee32num.value = self.value + '0'*(33-len(value))
             self.ieee32num.value = f'{self.ieee32num.value[0]} {self.ieee32num.value[1:10]} {self.ieee32num.value[10:]}'
             self.ieee64num.value = f'{ieee64[0]} {ieee64[1:13]} {ieee64[13:]}'
-            self.exp32n.value,self.mnt32dec.value  = (str(shift_m),f'32 bits: {dec_num}')
+            self.exp32n.value,self.mnt32dec.value  = (str(shift_m),f'32|float: {dec_num}')
             self.exp64n.value, self.mnt64dec.value = self.conversor.ieee3264_2n(self.value + '0'*(33-len(value)), shift=self.conversor.bin_ieee_dec_shift(
                 self.value + '0'*(33-len(value)), 32))
 
@@ -232,7 +231,6 @@ class Calculator(GridView):
             )
 
             self.numbers[0].value = dec_num
-            #print(dec_num)
             for idx in range(1, 4):
                 self.numbers[idx].value = self.conversor.convertirNM(dec_num, 10,self.vect_bases[idx])
 
@@ -241,15 +239,14 @@ class Calculator(GridView):
             ieee32 += '0'*(32-len(ieee32))
 
             self.ieee64num.value = self.value + '0'*(65-len(value))
-            self.ieee64num.value = f'{self.ieee64num.value[0]} {self.ieee64num.value[1:12]} {self.ieee64num.value[12:]}'
-            self.ieee32num.value = f'{ieee32[0]} {ieee32[1:9]} {ieee32[9:]}'
-            self.exp64n.value, self.mnt64dec.value = (str(shift_m), f'64 bits: {dec_num}')
+            self.ieee64num.value = f'{self.ieee64num.value[0]} {self.ieee64num.value[1:13]} {self.ieee64num.value[13:]}'
+            self.ieee32num.value = f'{ieee32[0]} {ieee32[1:10]} {ieee32[10:]}'
+            self.exp64n.value, self.mnt64dec.value = (str(shift_m), f'64|double : {dec_num}')
             self.exp32n.value, self.mnt32dec.value = self.conversor.ieee3264_2n(self.value + '0'*(65-len(value)), shift=self.conversor.bin_ieee_dec_shift(
                 self.value + '0'*(65-len(value)), 64))
-         
+
 
         return None
-
 
 
 
@@ -261,8 +258,6 @@ class Calculator(GridView):
     def watch_show_ac(self, show_ac: bool) -> None:
         """When the show_ac attribute change we need to update the buttons."""
         # Show AC and hide C or vice versa
-
-        # este metodo sirve de esquema para modificar [[X_B2],...,[X_B16]]
         self.c.visible = not show_ac
         self.ac.visible = show_ac
 
@@ -286,6 +281,7 @@ class Calculator(GridView):
         self.exp64n = Numbers()
         self.mnt32dec = Numbers()
         self.mnt64dec = Numbers()
+
 
         self.titulo = EleganTexto(
             "Conversor de Bases: IEEE-754", "rgb(0,150,80) on rgb(20,20,20)")
@@ -492,7 +488,7 @@ class CalculatorApp(App):
         await self.bind("k", "selectbase(16)", "HEX ")
         await self.bind('n','act_ieee(32)','32bit')
         await self.bind('m', 'act_ieee(64)', '64bit')
-        await self.bind("l", "act_docs", "Documentacion")
+        await self.bind("l", "act_docs", 'SRC')
         await self.bind("q", "quit", " Salir ")
 
     
@@ -556,25 +552,25 @@ class CalculatorApp(App):
         footer = Footer()
         self.bar = ScrollView(codigo_fuente,auto_width=True)
         self.bar.visible = False
-
+     
         await self.view.dock(self.calc, edge='top')
         await self.view.dock(self.bar, edge='left', z=1)
         await self.view.dock(footer, edge='bottom', size=1, z=2)
-        ###W
+
+        ##
 
 
 ccs = Console()
 
-print(figlet_format("basconvpy", font="banner3-D"))
+print(figlet_format("convbaspy", font="banner3-D"))
 print('''\t\b-> Grupo 2:
 \n\t  David Penilla - Juan Camilo Bolaños - Santiago Abadía - Sergio Andrés Ángel - Jean Pierre Vargas
 \n\t----------------------------------------------------------------------------------------------------
 ''')
-ccs.print('\tAdvertencia:\n\t   Intente no mantener presionada ninguna tecla.',style='red')
-ccs.print('\n\tNota:\n\t   Presione en los resultados para copiar su valor.',style='green')
+ccs.print('\tAdvertencia:', style='red')
+print('\t   Intente no mantener presionada ninguna tecla.')
+ccs.print('\t   Presione en los resultados para copiar su valor.',style='green')
 input('\n\n - presione enter para continuar...')
 CalculatorApp.run(title="Calculadora IEEE754", log="textual.log")
 
 
-
-    

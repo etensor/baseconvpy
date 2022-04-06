@@ -13,6 +13,7 @@ from conversor import floatingPoint
 from simpson1by3 import empezar
 import numpy as np
 from derivadas import transformations
+from solidoderevolucion import comenzarX
 
 
 st.set_page_config(
@@ -40,7 +41,7 @@ def campo_numeros(numeros):
 
 opt_menu = st.sidebar.selectbox(
     "Navegador del proyecto",
-    ("Presentacion","Convertidor de Bases","Derivadas","Métodos","Simpson")
+    ("Presentacion","Convertidor de Bases","Derivadas","Métodos","Simpson","Solido de revolción")
 )
 st.sidebar.caption('Bienvenido.')
 
@@ -499,19 +500,21 @@ if opt_menu == 'Simpson':
 
         #plt.show()
         st.pyplot(plt, figsize=(2, 2)) 
-               
-#''' 
-#st.latex(r'\frac{df}{dx} \;=\; f\,\'(x) \;=\quad')
-#for i in range(2,4):
-#    indx = '\''*i
-#    st.latex(
-#        f"\\frac{{{{d}}^{i}f }} {{{{dx}}^{i}}} \;=\; f\,{indx}(x) \;=\quad")
-#'''
-#
-#
-#''' documentacion++
-#with st.echo():
-#    st.write('epa')
-#'''
 
+if opt_menu == 'Solido de revolción':
+    confirmar = True
+    st.write('Solido de revolución')
+
+    function = st.text_input('Función', value='')
+    eje = st.radio('Eje de giro:',('x','y'))
+    desde = int(st.slider('Desde', min_value=-50, max_value=50, value = 0))
+    hasta = int(st.slider('Hasta', min_value=-50, max_value=50, value = 0))
+
+    if function != '' and desde != '' and hasta != '' and confirmar:
+        if eje == 'x':
+            resultado = comenzarX(function, desde, hasta)
+            st.success(f'Volumen: {resultado}') 
+
+        elif eje == 'y':
+            pass
             

@@ -125,8 +125,8 @@ class Conversor():
         return self.convert_decbase(self.convert_to_dec(num, bN,prec), bM,prec) if bN != bM else num
 
 
-    def binM(self,num : str) -> str:  # esta función no la usamos, manual mas garra.
-        return bin(int(num)).replace('0b','') #if num  != '' else num
+    #def binM(self,num : str) -> str:  # esta función no la usamos, manual mas garra.
+    #    return bin(int(num)).replace('0b','') #if num  != '' else num
    
 
     def dec_ieee3264(self,num,mod=32): # 8<>11|127<>1023|23<>52
@@ -164,7 +164,7 @@ class Conversor():
             res += q[idx] if idx < len(q) else '0'
             idx+=1
         
-        return res,shift
+        return res,shift,exponente
 
 
     def bin_ieee_dec_shift(self,num,mod=32): # funcion para poder extraer bien el shift del exponente que define el entero
